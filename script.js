@@ -59,10 +59,10 @@ async function extractFileInfo() {
         
         if (inputUrl.includes('pan-yz.cldisk.com')) {
             try {
-                // 使用 URL 对象解析链接
+                // 从 URL 中解析信息
                 const url = new URL(inputUrl);
+                const fileId = url.pathname.split('/').pop(); // 获取文件ID
                 const encodedFileName = url.searchParams.get('name');
-                const fileId = url.pathname.split('/').pop();
                 
                 if (!encodedFileName || !fileId) {
                     throw new Error("无效的文件链接");
@@ -74,11 +74,18 @@ async function extractFileInfo() {
                 fileInfo = {
                     name: fileName,
                     type: fileExtension,
-                    // 使用原始链接作为下载链接
-                    download: inputUrl
+                    id: fileId,
+                    originalUrl: inputUrl,
+                    // 构建可能的下载链接
+                    downloadUrls: [
+                        inputUrl,
+                        `https://pan-yz.cldisk.com/api/v1/share/download/${fileId}`,
+                        `https://pan-yz.cldisk.com/external/d/file/${fileId}/${encodedFileName}`
+                    ]
                 };
             } catch (e) {
-                throw new Error("无效的文件链接格式");
+                console.error("解析链接时出错：", e);
+                throw new Error("无法解析文件链接，请确保链接格式正确");
             }
         } else if (inputUrl.includes('chaoxing.com')) {
             const match = inputUrl.match(/objectId=([^&]+)/);
@@ -90,7 +97,8 @@ async function extractFileInfo() {
             fileInfo = {
                 name: '超星文件',
                 type: '未知',
-                download: `https://sharewh.chaoxing.com/share/download/${objectId}`
+                id: objectId,
+                downloadUrls: [`https://sharewh.chaoxing.com/share/download/${objectId}`]
             };
         } else {
             throw new Error("不支持的链接格式");
@@ -101,7 +109,16 @@ async function extractFileInfo() {
             <div class="file-info">
                 <p><strong>文件名：</strong>${fileInfo.name}</p>
                 <p><strong>文件类型：</strong>${fileInfo.type}</p>
-                <p><strong>下载链接：</strong><a href="${fileInfo.download}" target="_blank" class="download-link">点击下载</a></p>
+                <p><strong>文件ID：</strong>${fileInfo.id}</p>
+                <p><strong>下载链接：</strong></p>
+                <ul>
+                    ${fileInfo.downloadUrls.map((url, index) => 
+                        `<li><a href="${url}" target="_blank" class="download-link">下载链接 ${index + 1}</a></li>`
+                    ).join('')}
+                </ul>
+                ${fileInfo.originalUrl ? 
+                    `<p><strong>原始链接：</strong><a href="${fileInfo.originalUrl}" target="_blank">点击访问</a></p>` 
+                    : ''}
             </div>`;
 
         outputElement.innerHTML = displayContent;
