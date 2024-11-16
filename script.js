@@ -52,7 +52,7 @@ function extractFileInfo() {
         return;
     }
 
-    const fileInfo = parseFileInfo(inputUrl);
+    const fileInfo = parseFileInfo();
 
     if (fileInfo) {
         outputElement.innerHTML = `
@@ -65,7 +65,7 @@ function extractFileInfo() {
     }
 }
 
-function parseFileInfo(url) {
+function parseFileInfo() {
     // 从页面中提取信息
     const name = document.getElementById('name').textContent;
     const size = document.querySelector('.fileDx').textContent.replace('大小：', '');
