@@ -45,6 +45,8 @@ function extractFileInfo() {
     const inputUrl = document.getElementById('inputUrl').value.trim();
     const outputElement = document.getElementById('linkInfo');
     
+    console.log("输入的链接是：", inputUrl);
+
     if (!inputUrl) {
         outputElement.textContent = "请输入链接！";
         return;
