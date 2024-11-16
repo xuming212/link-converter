@@ -70,15 +70,12 @@ async function extractFileInfo() {
 
                 const fileName = decodeURIComponent(encodedFileName);
                 const fileExtension = fileName.split('.').pop().toUpperCase();
-                
-                // 构建直接下载链接
-                const downloadUrl = `https://pan-yz.cldisk.com/external/d/file/${fileId}/${encodedFileName}`;
 
                 fileInfo = {
                     name: fileName,
                     type: fileExtension,
-                    download: downloadUrl,
-                    originalUrl: inputUrl
+                    // 使用原始链接作为下载链接
+                    download: inputUrl
                 };
             } catch (e) {
                 throw new Error("无效的文件链接格式");
@@ -100,10 +97,12 @@ async function extractFileInfo() {
         }
 
         // 构建显示内容
-        let displayContent = `文件名：${fileInfo.name}<br>`;
-        displayContent += `文件类型：${fileInfo.type}<br>`;
-        displayContent += `下载链接：<a href="${fileInfo.download}" target="_blank">点击下载</a><br>`;
-        displayContent += `原始链接：<a href="${fileInfo.originalUrl || fileInfo.download}" target="_blank">查看原始页面</a>`;
+        let displayContent = `
+            <div class="file-info">
+                <p><strong>文件名：</strong>${fileInfo.name}</p>
+                <p><strong>文件类型：</strong>${fileInfo.type}</p>
+                <p><strong>下载链接：</strong><a href="${fileInfo.download}" target="_blank" class="download-link">点击下载</a></p>
+            </div>`;
 
         outputElement.innerHTML = displayContent;
 
