@@ -61,17 +61,24 @@ async function extractFileInfo() {
             try {
                 // 使用 URL 对象解析链接
                 const url = new URL(inputUrl);
-                const fileName = url.searchParams.get('name');
+                const encodedFileName = url.searchParams.get('name');
                 const fileId = url.pathname.split('/').pop();
                 
-                if (!fileName || !fileId) {
+                if (!encodedFileName || !fileId) {
                     throw new Error("无效的文件链接");
                 }
 
+                const fileName = decodeURIComponent(encodedFileName);
+                const fileExtension = fileName.split('.').pop().toUpperCase();
+                
+                // 构建直接下载链接
+                const downloadUrl = `https://pan-yz.cldisk.com/external/d/file/${fileId}/${encodedFileName}`;
+
                 fileInfo = {
-                    name: decodeURIComponent(fileName),
-                    type: fileName.split('.').pop().toUpperCase(),
-                    download: inputUrl
+                    name: fileName,
+                    type: fileExtension,
+                    download: downloadUrl,
+                    originalUrl: inputUrl
                 };
             } catch (e) {
                 throw new Error("无效的文件链接格式");
@@ -95,7 +102,8 @@ async function extractFileInfo() {
         // 构建显示内容
         let displayContent = `文件名：${fileInfo.name}<br>`;
         displayContent += `文件类型：${fileInfo.type}<br>`;
-        displayContent += `下载链接：<a href="${fileInfo.download}" target="_blank">点击下载</a>`;
+        displayContent += `下载链接：<a href="${fileInfo.download}" target="_blank">点击下载</a><br>`;
+        displayContent += `原始链接：<a href="${fileInfo.originalUrl || fileInfo.download}" target="_blank">查看原始页面</a>`;
 
         outputElement.innerHTML = displayContent;
 
