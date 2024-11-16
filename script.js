@@ -66,23 +66,15 @@ function extractFileInfo() {
 }
 
 function parseFileInfo(url) {
-    // 检查链接是否包含 "cldisk.com"
-    if (url.includes("cldisk.com")) {
-        // 使用正则表达式从链接中提取 objectId 和 name
-        const objectIdMatch = url.match(/objectId=([^&]+)/);
-        const nameMatch = url.match(/name=([^&]+)/);
+    // 从页面中提取信息
+    const name = document.getElementById('name').textContent;
+    const size = document.querySelector('.fileDx').textContent.replace('大小：', '');
+    const download = fileinfo.download; // 假设 fileinfo 是全局变量
 
-        if (objectIdMatch && nameMatch) {
-            const objectId = objectIdMatch[1];
-            const name = decodeURIComponent(nameMatch[1]);
-
-            return {
-                name: name,
-                size: "未知大小", // 如果无法从链接中获取大小，可以设置为未知
-                type: "未知类型", // 如果无法从链接中获取类型，可以设置为未知
-                download: `https://d0.cldisk.com/download/${objectId}`
-            };
-        }
-    }
-    return null;
+    return {
+        name: name,
+        size: size,
+        type: fileinfo.suffix, // 假设类型是后缀
+        download: download
+    };
 }
