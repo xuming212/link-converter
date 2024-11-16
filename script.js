@@ -65,19 +65,27 @@ async function extractFileInfo() {
         }
 
         const objectId = match[1];
-        const apiUrl = `https://sharewh.chaoxing.com/share/info/${objectId}`;
+        // 使用新的 API 端点
+        const apiUrl = `https://sharewh.chaoxing.com/share/verify/${objectId}`;
 
         // 发送请求获取文件信息
-        const response = await fetch(apiUrl);
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'pwd=' // 如果需要密码，可以在这里添加
+        });
+        
         const data = await response.json();
 
-        if (data.status === false) {
+        if (!data.result) {
             outputElement.textContent = "获取文件信息失败，请检查链接是否有效！";
         } else {
             const fileInfo = {
-                name: data.data.name || '未知',
-                size: ((data.data.filesize || 0) / (1024 * 1024)).toFixed(2) + ' MB',
-                type: data.data.suffix || '未知',
+                name: data.fileInfo.name || '未知',
+                size: ((data.fileInfo.size || 0) / (1024 * 1024)).toFixed(2) + ' MB',
+                type: data.fileInfo.suffix || '未知',
                 download: `https://sharewh.chaoxing.com/share/download/${objectId}`
             };
 
