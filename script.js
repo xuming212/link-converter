@@ -61,23 +61,14 @@ async function extractFileInfo() {
         // 判断链接类型
         if (inputUrl.includes('pan-yz.cldisk.com')) {
             // 处理 cldisk 链接
-            const fileId = inputUrl.match(/file\/(\d+)/)?.[1];
-            if (!fileId) {
-                throw new Error("无效的文件ID");
-            }
+            const urlParams = new URL(inputUrl);
+            const fileName = urlParams.searchParams.get('name');
             
-            const apiUrl = `https://pan-yz.cldisk.com/api/v1/share/file/${fileId}/info`;
-            const response = await fetch(apiUrl);
-            const data = await response.json();
-            
-            if (!data.success) {
-                throw new Error(data.message || "获取文件信息失败");
-            }
-            
+            // 从URL中提取文件信息
             fileInfo = {
-                name: decodeURIComponent(inputUrl.match(/name=([^&]+)/)?.[1] || '未知'),
-                size: ((data.data?.size || 0) / (1024 * 1024)).toFixed(2) + ' MB',
-                type: data.data?.extension || '未知',
+                name: fileName ? decodeURIComponent(fileName) : '未知',
+                size: '未知', // 由于API限制，无法获取具体大小
+                type: fileName ? fileName.split('.').pop() : '未知',
                 download: inputUrl
             };
         } else if (inputUrl.includes('chaoxing.com')) {
@@ -116,7 +107,7 @@ async function extractFileInfo() {
 
         outputElement.innerHTML = `
 文件名：${fileInfo.name}<br>
-文件大小：${fileInfo.size}<br>
+${fileInfo.size !== '未知' ? `文件大小：${fileInfo.size}<br>` : ''}
 文件类型：${fileInfo.type}<br>
 下载链接：<a href="${fileInfo.download}" target="_blank">点击下载</a>`;
 
