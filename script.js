@@ -41,65 +41,56 @@ function hideLoading() {
     document.getElementById('loadingIndicator').style.display = 'none';
 }
 
-function fetchFileInfo(url) {
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            window.fileinfo = data; // 假设服务器返回的数据格式与 fileinfo 相同
-            updateFileInfo();
-        })
-        .catch(error => {
-            console.error('获取文件信息失败:', error);
-            document.getElementById('linkInfo').textContent = "无法提取信息，请检查链接格式！";
-        });
-}
-
-function updateFileInfo() {
+async function extractFileInfo() {
+    const inputUrl = document.getElementById('inputUrl').value.trim();
     const outputElement = document.getElementById('linkInfo');
-    const fileInfo = parseFileInfo();
+    
+    console.log("输入的链接是：", inputUrl);
 
-    if (fileInfo) {
-        outputElement.innerHTML = `
+    if (!inputUrl) {
+        outputElement.textContent = "请输入链接！";
+        return;
+    }
+
+    // 显示加载动画
+    showLoading();
+
+    try {
+        // 从链接中提取 objectId
+        const match = inputUrl.match(/objectId=([^&]+)/);
+        if (!match) {
+            outputElement.textContent = "无法识别的链接格式！";
+            hideLoading();
+            return;
+        }
+
+        const objectId = match[1];
+        const apiUrl = `https://sharewh.chaoxing.com/share/info/${objectId}`;
+
+        // 发送请求获取文件信息
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data.status === false) {
+            outputElement.textContent = "获取文件信息失败，请检查链接是否有效！";
+        } else {
+            const fileInfo = {
+                name: data.data.name || '未知',
+                size: ((data.data.filesize || 0) / (1024 * 1024)).toFixed(2) + ' MB',
+                type: data.data.suffix || '未知',
+                download: `https://sharewh.chaoxing.com/share/download/${objectId}`
+            };
+
+            outputElement.innerHTML = `
 文件名：${fileInfo.name}<br>
 文件大小：${fileInfo.size}<br>
 文件类型：${fileInfo.type}<br>
 下载链接：<a href="${fileInfo.download}" target="_blank">点击下载</a>`;
-    } else {
-        outputElement.textContent = "无法提取信息，请检查链接格式！";
+        }
+    } catch (error) {
+        console.error("获取文件信息时出错：", error);
+        outputElement.textContent = "获取文件信息时发生错误，请稍后重试！";
+    } finally {
+        hideLoading();
     }
-}
-
-function extractFileInfo() {
-    const inputUrl = document.getElementById('inputUrl').value.trim();
-    console.log("输入的链接是：", inputUrl);
-
-    if (!inputUrl) {
-        document.getElementById('linkInfo').textContent = "请输入链接！";
-        return;
-    }
-
-    // 调用 fetchFileInfo 以获取数据
-    fetchFileInfo(inputUrl);
-}
-
-function parseFileInfo() {
-    // 确保 fileinfo 是全局变量
-    if (!window.fileinfo) {
-        console.error("fileinfo 对象未定义");
-        return null;
-    }
-
-    const name = fileinfo.name;
-    const size = (fileinfo.filesize / (1024 * 1024)).toFixed(2) + ' MB'; // 将字节转换为 MB
-    const type = fileinfo.suffix;
-    const download = fileinfo.download;
-
-    console.log("提取的信息：", { name, size, type, download });
-
-    return {
-        name: name,
-        size: size,
-        type: type,
-        download: download
-    };
 }
