@@ -41,17 +41,21 @@ function hideLoading() {
     document.getElementById('loadingIndicator').style.display = 'none';
 }
 
-function extractFileInfo() {
-    const inputUrl = document.getElementById('inputUrl').value.trim();
+function fetchFileInfo(url) {
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            window.fileinfo = data; // 假设服务器返回的数据格式与 fileinfo 相同
+            updateFileInfo();
+        })
+        .catch(error => {
+            console.error('获取文件信息失败:', error);
+            document.getElementById('linkInfo').textContent = "无法提取信息，请检查链接格式！";
+        });
+}
+
+function updateFileInfo() {
     const outputElement = document.getElementById('linkInfo');
-    
-    console.log("输入的链接是：", inputUrl);
-
-    if (!inputUrl) {
-        outputElement.textContent = "请输入链接！";
-        return;
-    }
-
     const fileInfo = parseFileInfo();
 
     if (fileInfo) {
@@ -65,26 +69,37 @@ function extractFileInfo() {
     }
 }
 
-function parseFileInfo() {
-    // 从页面中提取信息
-    const nameElement = document.getElementById('name');
-    const sizeElement = document.querySelector('.fileDx');
+function extractFileInfo() {
+    const inputUrl = document.getElementById('inputUrl').value.trim();
+    console.log("输入的链接是：", inputUrl);
 
-    if (!nameElement || !sizeElement) {
-        console.error("无法找到所需的 DOM 元素");
+    if (!inputUrl) {
+        document.getElementById('linkInfo').textContent = "请输入链接！";
+        return;
+    }
+
+    // 调用 fetchFileInfo 以获取数据
+    fetchFileInfo(inputUrl);
+}
+
+function parseFileInfo() {
+    // 确保 fileinfo 是全局变量
+    if (!window.fileinfo) {
+        console.error("fileinfo 对象未定义");
         return null;
     }
 
-    const name = nameElement.textContent;
-    const size = sizeElement.textContent.replace('大小：', '');
-    const download = fileinfo.download; // 假设 fileinfo 是全局变量
+    const name = fileinfo.name;
+    const size = (fileinfo.filesize / (1024 * 1024)).toFixed(2) + ' MB'; // 将字节转换为 MB
+    const type = fileinfo.suffix;
+    const download = fileinfo.download;
 
-    console.log("提取的信息：", { name, size, download });
+    console.log("提取的信息：", { name, size, type, download });
 
     return {
         name: name,
         size: size,
-        type: fileinfo.suffix, // 假设类型是后缀
+        type: type,
         download: download
     };
 }
