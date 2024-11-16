@@ -52,68 +52,56 @@ async function extractFileInfo() {
         return;
     }
 
-    // 显示加载动画
     showLoading();
 
     try {
         let fileInfo;
         
-        // 判断链接类型
         if (inputUrl.includes('pan-yz.cldisk.com')) {
-            // 处理 cldisk 链接
-            const urlParams = new URL(inputUrl);
-            const fileName = urlParams.searchParams.get('name');
-            
-            // 从URL中提取文件信息
-            fileInfo = {
-                name: fileName ? decodeURIComponent(fileName) : '未知',
-                size: '未知', // 由于API限制，无法获取具体大小
-                type: fileName ? fileName.split('.').pop() : '未知',
-                download: inputUrl
-            };
+            try {
+                // 使用 URL 对象解析链接
+                const url = new URL(inputUrl);
+                const fileName = url.searchParams.get('name');
+                const fileId = url.pathname.split('/').pop();
+                
+                if (!fileName || !fileId) {
+                    throw new Error("无效的文件链接");
+                }
+
+                fileInfo = {
+                    name: decodeURIComponent(fileName),
+                    type: fileName.split('.').pop().toUpperCase(),
+                    download: inputUrl
+                };
+            } catch (e) {
+                throw new Error("无效的文件链接格式");
+            }
         } else if (inputUrl.includes('chaoxing.com')) {
-            // 处理超星链接
             const match = inputUrl.match(/objectId=([^&]+)/);
             if (!match) {
                 throw new Error("无法识别的超星链接格式");
             }
 
             const objectId = match[1];
-            const apiUrl = `https://sharewh.chaoxing.com/share/verify/${objectId}`;
-            
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: 'pwd='
-            });
-            
-            const data = await response.json();
-            
-            if (!data.result) {
-                throw new Error("获取文件信息失败");
-            }
-            
             fileInfo = {
-                name: data.fileInfo.name || '未知',
-                size: ((data.fileInfo.size || 0) / (1024 * 1024)).toFixed(2) + ' MB',
-                type: data.fileInfo.suffix || '未知',
+                name: '超星文件',
+                type: '未知',
                 download: `https://sharewh.chaoxing.com/share/download/${objectId}`
             };
         } else {
             throw new Error("不支持的链接格式");
         }
 
-        outputElement.innerHTML = `
-文件名：${fileInfo.name}<br>
-${fileInfo.size !== '未知' ? `文件大小：${fileInfo.size}<br>` : ''}
-文件类型：${fileInfo.type}<br>
-下载链接：<a href="${fileInfo.download}" target="_blank">点击下载</a>`;
+        // 构建显示内容
+        let displayContent = `文件名：${fileInfo.name}<br>`;
+        displayContent += `文件类型：${fileInfo.type}<br>`;
+        displayContent += `下载链接：<a href="${fileInfo.download}" target="_blank">点击下载</a>`;
+
+        outputElement.innerHTML = displayContent;
 
     } catch (error) {
-        console.error("获取文件信息时出错：", error);
-        outputElement.textContent = error.message || "获取文件信息时发生错误，请稍后重试！";
+        console.error("处理链接时出错：", error);
+        outputElement.textContent = error.message || "处理链接时发生错误！";
     } finally {
         hideLoading();
     }
