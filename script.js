@@ -66,14 +66,23 @@ function extractFileInfo() {
 }
 
 function parseFileInfo(url) {
-    // 模拟数据解析
+    // 检查链接是否包含 "cldisk.com"
     if (url.includes("cldisk.com")) {
-        return {
-            name: "示例文件名.zip",
-            size: "33.27 MB",
-            type: "zip",
-            download: "https://d0.cldisk.com/download/c3962e7dadb1147b7d5c7ebf905d0e1d"
-        };
+        // 使用正则表达式从链接中提取 objectId 和 name
+        const objectIdMatch = url.match(/objectId=([^&]+)/);
+        const nameMatch = url.match(/name=([^&]+)/);
+
+        if (objectIdMatch && nameMatch) {
+            const objectId = objectIdMatch[1];
+            const name = decodeURIComponent(nameMatch[1]);
+
+            return {
+                name: name,
+                size: "未知大小", // 如果无法从链接中获取大小，可以设置为未知
+                type: "未知类型", // 如果无法从链接中获取类型，可以设置为未知
+                download: `https://d0.cldisk.com/download/${objectId}`
+            };
+        }
     }
     return null;
 }
