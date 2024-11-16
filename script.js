@@ -67,9 +67,19 @@ function extractFileInfo() {
 
 function parseFileInfo() {
     // 从页面中提取信息
-    const name = document.getElementById('name').textContent;
-    const size = document.querySelector('.fileDx').textContent.replace('大小：', '');
+    const nameElement = document.getElementById('name');
+    const sizeElement = document.querySelector('.fileDx');
+
+    if (!nameElement || !sizeElement) {
+        console.error("无法找到所需的 DOM 元素");
+        return null;
+    }
+
+    const name = nameElement.textContent;
+    const size = sizeElement.textContent.replace('大小：', '');
     const download = fileinfo.download; // 假设 fileinfo 是全局变量
+
+    console.log("提取的信息：", { name, size, download });
 
     return {
         name: name,
