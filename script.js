@@ -1,35 +1,41 @@
-function convertLinks() {
-    const inputText = document.getElementById('inputLinks').value;
-    const links = inputText.split('\n');
-    const outputElement = document.getElementById('outputLinks');
+function extractLinkInfo() {
+    const inputUrl = document.getElementById('inputUrl').value.trim();
+    const outputElement = document.getElementById('linkInfo');
     
-    // 显示加载动画
-    showLoading();
-    
-    // 使用 setTimeout 来模拟异步处理，给加载动画一个显示的机会
-    setTimeout(() => {
-        const convertedLinks = links.map(link => {
-            link = link.trim();
-            if (!link) return ''; // 跳过空行
-            const match = link.match(/objectId=([^&]+)/);
-            if (match) {
-                return `https://sharewh.chaoxing.com/share/download/${match[1]}`;
-            } else {
-                return `无效链接: ${link}`;
-            }
-        });
+    if (!inputUrl) {
+        outputElement.textContent = "请输入链接！";
+        return;
+    }
 
-        outputElement.value = convertedLinks.filter(link => link).join('\n');
+    // 模拟从链接提取信息
+    const fileInfo = parseLink(inputUrl);
+
+    if (fileInfo) {
+        outputElement.textContent = `
+文件名：${fileInfo.name}
+文件大小：${fileInfo.size}
+上传时间：${fileInfo.uploadTime}
+下载链接：${fileInfo.downloadUrl}`;
+    } else {
+        outputElement.textContent = "无法提取信息，请检查链接格式！";
+    }
+}
+
+// 模拟解析链接中的信息
+function parseLink(url) {
+    // 检查链接是否符合特定格式
+    if (url.startsWith("https://pan-yz.cldisk.com/external/m/file/")) {
+        const urlParams = new URL(url);
+        const fileName = urlParams.searchParams.get('name') || '未知文件名';
         
-        // 隐藏加载动画
-        hideLoading();
-    }, 100);
-}
+        // 模拟生成文件信息
+        return {
+            name: decodeURIComponent(fileName),
+            size: "23.5 MB", // 示例数据，可以用实际逻辑替换
+            uploadTime: "2024-01-01", // 示例数据
+            downloadUrl: url
+        };
+    }
 
-function showLoading() {
-    document.getElementById('loadingIndicator').style.display = 'block';
-}
-
-function hideLoading() {
-    document.getElementById('loadingIndicator').style.display = 'none';
+    return null; // 返回null表示无效链接
 }
